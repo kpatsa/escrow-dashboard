@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Escrow Platform — Build Progress</title>
+<style>
+  :root{
+    --ground:#f6f7f9; --surface:#ffffff; --surface-2:#eef1f6;
+    --ink:#1a1f2b; --muted:#5b6472; --faint:#8a93a3; --border:#e2e6ee;
+    --accent:#3355d1; --accent-soft:#eaeefc;
+    --done:#1f8a5e; --done-bg:#e6f4ec; --gated:#b9760c; --gated-bg:#fbf0dc;
+    --blocked:#c8384a; --blocked-bg:#fbe7ea; --idle:#8a93a3; --idle-bg:#eef0f4;
+    --progress:#3355d1; --progress-bg:#eaeefc; --review:#b9760c; --review-bg:#fbf0dc;
+    --shadow:0 1px 2px rgba(26,31,43,.04),0 2px 8px rgba(26,31,43,.05);
+    --mono:ui-monospace,"Cascadia Code",Consolas,"SFMono-Regular",monospace;
+    --sans:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --ground:#0e131d; --surface:#151b28; --surface-2:#1b2333;
+    --ink:#e6eaf2; --muted:#98a3b6; --faint:#6b7688; --border:#262f40;
+    --accent:#7089f5; --accent-soft:#1c2740;
+    --done:#35b07e; --done-bg:#12281f; --gated:#d99a2b; --gated-bg:#2c2410;
+    --blocked:#e0596a; --blocked-bg:#2c1519; --idle:#6b7688; --idle-bg:#1b2333;
+    --progress:#7089f5; --progress-bg:#1c2740; --review:#d99a2b; --review-bg:#2c2410;
+    --shadow:0 1px 2px rgba(0,0,0,.25),0 2px 10px rgba(0,0,0,.28);
+  }}
+  :root[data-theme="light"]{--ground:#f6f7f9;--surface:#fff;--surface-2:#eef1f6;--ink:#1a1f2b;--muted:#5b6472;--faint:#8a93a3;--border:#e2e6ee;--accent:#3355d1;--accent-soft:#eaeefc;--done:#1f8a5e;--done-bg:#e6f4ec;--gated:#b9760c;--gated-bg:#fbf0dc;--blocked:#c8384a;--blocked-bg:#fbe7ea;--idle:#8a93a3;--idle-bg:#eef0f4;--progress:#3355d1;--progress-bg:#eaeefc;--review:#b9760c;--review-bg:#fbf0dc;}
+  :root[data-theme="dark"]{--ground:#0e131d;--surface:#151b28;--surface-2:#1b2333;--ink:#e6eaf2;--muted:#98a3b6;--faint:#6b7688;--border:#262f40;--accent:#7089f5;--accent-soft:#1c2740;--done:#35b07e;--done-bg:#12281f;--gated:#d99a2b;--gated-bg:#2c2410;--blocked:#e0596a;--blocked-bg:#2c1519;--idle:#6b7688;--idle-bg:#1b2333;--progress:#7089f5;--progress-bg:#1c2740;--review:#d99a2b;--review-bg:#2c2410;}
+  *,*::before,*::after{box-sizing:border-box;}
+  .page{background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased;padding:32px 24px 56px;margin:0;}
+  .wrap{max-width:1120px;margin:0 auto;}
+  .page h1,.page h2,.page h3,.page p{margin:0;}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:600;}
+  .tnum{font-variant-numeric:tabular-nums;}
+  .mast{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:6px;}
+  .mast h1{font-size:30px;font-weight:700;letter-spacing:-.01em;text-wrap:balance;}
+  .phase-pill{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-soft);border:1px solid var(--border);padding:7px 12px;border-radius:999px;}
+  .phase-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);}
+  .derived{display:flex;align-items:flex-start;gap:10px;margin-top:14px;padding:11px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;font-size:12.5px;color:var(--muted);max-width:820px;}
+  .derived b{color:var(--ink);font-weight:600;} .derived .mark{color:var(--accent);font-weight:700;font-family:var(--mono);}
+  section{margin-top:34px;}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+  .sec-head h2{font-size:15px;font-weight:700;letter-spacing:.01em;} .sec-head .note{font-size:12.5px;color:var(--faint);}
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  .tile{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 16px 15px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+  .tile::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);}
+  .tile .k{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);}
+  .tile .v{font-size:27px;font-weight:700;margin-top:9px;letter-spacing:-.01em;} .tile .v small{font-size:15px;font-weight:600;color:var(--muted);}
+  .tile .sub{font-size:12px;color:var(--muted);margin-top:4px;}
+  .group{margin-bottom:20px;}
+  .group>.glabel{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:9px;display:flex;align-items:center;gap:8px;}
+  .group>.glabel .path{color:var(--accent);}
+  .mods{display:grid;grid-template-columns:repeat(auto-fill,minmax(224px,1fr));gap:11px;}
+  .mod{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:12px 13px 12px 15px;position:relative;box-shadow:var(--shadow);}
+  .mod::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:3px;background:var(--stripe,var(--idle));}
+  .mod .name{font-family:var(--mono);font-size:13.5px;font-weight:600;} .mod .desc{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.4;}
+  .mod[data-state="gated"]{--stripe:var(--gated);} .mod[data-state="idle"]{--stripe:var(--idle);}
+  .mod[data-state="progress"]{--stripe:var(--accent);} .mod[data-state="done"]{--stripe:var(--done);} .mod[data-state="blocked"]{--stripe:var(--blocked);}
+  /* Row 234: dev-only reuses the muted `idle` palette rather than introducing a new
+     colour — it is a neutral fact about the tree, not progress, and not a problem. */
+  .mod[data-state="devonly"]{--stripe:var(--faint);}
+  .pill{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:6px;margin-top:9px;}
+  .pill .d{width:6px;height:6px;border-radius:50%;}
+  .pill.idle{color:var(--idle);background:var(--idle-bg);} .pill.idle .d{background:var(--idle);}
+  .pill.gated,.pill.review{color:var(--gated);background:var(--gated-bg);} .pill.gated .d,.pill.review .d{background:var(--gated);}
+  .pill.progress{color:var(--accent);background:var(--accent-soft);} .pill.progress .d{background:var(--accent);}
+  .pill.done{color:var(--done);background:var(--done-bg);} .pill.done .d{background:var(--done);}
+  .pill.blocked{color:var(--blocked);background:var(--blocked-bg);} .pill.blocked .d{background:var(--blocked);}
+  .pill.devonly{color:var(--faint);background:var(--idle-bg);} .pill.devonly .d{background:var(--faint);}
+  .legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:2px;} .legend span{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);} .legend .d{width:9px;height:9px;border-radius:2px;}
+  .track{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:13px;overflow:hidden;}
+  .step{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:14px;background:var(--surface);padding:14px 16px;}
+  .step .num{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--faint);text-align:center;}
+  .step[data-state="progress"] .num{color:var(--accent);} .step[data-state="done"] .num{color:var(--done);}
+  .step .body .t{font-size:14px;font-weight:600;} .step .body .d{font-size:12.5px;color:var(--muted);margin-top:2px;} .step .pill{margin-top:0;}
+  .gates{display:flex;flex-direction:column;gap:11px;}
+  .gate{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--stripe,var(--gated));border-radius:11px;padding:13px 15px;box-shadow:var(--shadow);}
+  .gate[data-state="review"]{--stripe:var(--gated);} .gate[data-state="blocked"]{--stripe:var(--blocked);} .gate[data-state="done"]{--stripe:var(--done);} .gate[data-state="idle"]{--stripe:var(--idle);}
+  .gate .tag{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);background:var(--surface-2);border:1px solid var(--border);padding:4px 8px;border-radius:6px;white-space:nowrap;}
+  .gate .g-body .t{font-size:13.5px;font-weight:600;} .gate .g-body .m{font-size:12.5px;color:var(--muted);margin-top:2px;} .gate .g-body code{font-family:var(--mono);font-size:12px;color:var(--accent);}
+  .log{border:1px solid var(--border);border-radius:13px;overflow:hidden;}
+  .log .row{display:grid;grid-template-columns:160px 118px 1fr;gap:14px;padding:11px 16px;border-top:1px solid var(--border);font-size:13px;}
+  .log .row:first-child{border-top:none;} .log .ts{font-family:var(--mono);font-size:12px;color:var(--faint);white-space:nowrap;}
+  .log .who{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--accent);} .log .what{color:var(--ink);} .log .what code{font-family:var(--mono);font-size:12px;color:var(--muted);}
+  .foot{margin-top:34px;padding-top:16px;border-top:1px solid var(--border);font-size:12px;color:var(--faint);line-height:1.7;} .foot code{font-family:var(--mono);color:var(--muted);}
+  @media (max-width:760px){.tiles{grid-template-columns:repeat(2,1fr);} .log .row{grid-template-columns:1fr;gap:3px;} .gate,.step{grid-template-columns:1fr auto;} .step .num{display:none;}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+</style>
+<body>
+<div class="page">
+ <div class="wrap">
+  <header>
+    <div class="mast">
+      <div>
+        <div class="eyebrow">Escrow Platform &middot; Ghana (GHS) + WAEMU (XOF)</div>
+        <h1>Build Progress</h1>
+      </div>
+      <span class="phase-pill"><span class="dot"></span>Phase D &middot; Build</span>
+    </div>
+    <div class="derived">
+      <span class="mark">&#8635;</span>
+      <div><b>Derived view — not a source of truth.</b> High-level build state only. Regenerated from the internal build record — sanitized: no security-gate detail, no fee internals, no governance data. Last updated <b class="tnum">2026-09-05 09:59 GST</b>.</div>
+    </div>
+  </header>
+
+  <section>
+    <div class="tiles">
+      <div class="tile"><div class="k">Modules built</div><div class="v tnum">5 <small>/ 21</small></div><div class="sub">apps/api domain modules</div></div>
+      <div class="tile"><div class="k">Build step</div><div class="v tnum">2 <small>/ 7</small></div><div class="sub">§11.4 vertical-slice sequence</div></div>
+      <div class="tile"><div class="k">Open gates</div><div class="v tnum">64</div><div class="sub">HALT_LEDGER.md — non-terminal, PARKED/RULED excluded</div></div>
+      <div class="tile"><div class="k">MVP acceptance</div><div class="v tnum">0 <small>/ 41</small></div><div class="sub">TC-01…41 (sandbox) — <b>HUMAN-SET, not measured</b></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Architecture — modular monolith</h2>
+      <span class="note">One NestJS process, one PostgreSQL database. Modules are code-ownership boundaries, not services (§11.3).</span>
+    </div>
+    <div class="legend" style="margin-bottom:18px;">
+      <span><span class="d" style="background:var(--idle)"></span>Not started</span>
+      <span><span class="d" style="background:var(--accent)"></span>In progress</span>
+      <span><span class="d" style="background:var(--gated)"></span>Gated — awaiting review</span>
+      <span><span class="d" style="background:var(--done)"></span>Done — passed its gate</span>
+      <span><span class="d" style="background:var(--blocked)"></span>Blocked</span>
+      <span><span class="d" style="background:var(--faint)"></span>Dev-only — never ships</span>
+    </div>
+    <div class="group">
+      <div class="glabel"><span class="path">packages/</span> shared foundation</div>
+      <div class="mods">
+        <div class="mod" data-state="progress"><div class="name">api-client</div><div class="desc">Typed REST client shared by web + mobile. <b>2 source file(s) on disk, imported from NOWHERE in apps/*/src or packages/*/src — built dark.</b></div><span class="pill progress"><span class="d"></span>Built — 0 importers</span></div>
+        <div class="mod" data-state="done"><div class="name">i18n</div><div class="desc">EN/FR copy catalogue + locale resolution, shared by every surface. <b>Imported from 7 source file(s).</b></div><span class="pill done"><span class="d"></span>In use</span></div>
+        <div class="mod" data-state="done"><div class="name">shared-types</div><div class="desc">The §3 data model as TypeScript types — single source of truth. <b>Imported from 4 source file(s).</b></div><span class="pill done"><span class="d"></span>In use</span></div>
+      </div>
+    </div>
+    <div class="group">
+      <div class="glabel"><span class="path">apps/api/</span> domain modules</div>
+      <div class="mods">
+        <div class="mod" data-state="gated"><div class="name">accounts</div><div class="desc">apps/api/src/accounts/ <b>Registered, but bound to stub seams (IllustrativePayoutDestinationPolicyProvider,MockPayoutNameEnquiryProvider) — cannot execute for real.</b></div><span class="pill gated"><span class="d"></span>Wired — seam UNSET</span></div>
+        <div class="mod" data-state="progress"><div class="name">admin-bootstrap-cli</div><div class="desc">apps/api/src/admin-bootstrap-cli/ <b>On disk but NOT in app.module.ts — unreachable until its cutover.</b></div><span class="pill progress"><span class="d"></span>Built — not registered</span></div>
+        <div class="mod" data-state="gated"><div class="name">admin</div><div class="desc">apps/api/src/admin/ <b>Registered, but bound to stub seams (InMemoryFundingRateLimiter,InMemorySourceRateLimiter NoopLoggingOpsAlertSink) — cannot execute for real.</b> <b>7/8 controllers registered — the rest are 404 by design.</b></div><span class="pill gated"><span class="d"></span>Wired — seam UNSET</span></div>
+        <div class="mod" data-state="gated"><div class="name">auth</div><div class="desc">apps/api/src/auth/ <b>Registered, but bound to stub seams (InMemoryAuthOtpRequestRateLimiter,InMemoryAuthOtpVerifyRateLimiter InMemorySourceRateLimiter,InMemoryStatusReadRateLimiter MockLoggingOtpDeliveryPort) — cannot execute for real.</b></div><span class="pill gated"><span class="d"></span>Wired — seam UNSET</span></div>
+        <div class="mod" data-state="gated"><div class="name">config</div><div class="desc">§3.4 config table read at boot; D28 Class-A governance. <b>Registered, but bound to stub seams (InMemoryConfigRepository) — cannot execute for real.</b></div><span class="pill gated"><span class="d"></span>Wired — seam UNSET</span></div>
+        <div class="mod" data-state="devonly"><div class="name">dev-seed</div><div class="desc">apps/api/src/dev-seed/ <b>Excluded from the production build by apps/api/tsconfig.build.json — dev/test-only BY DESIGN. Its absence from app.module.ts is the SAFETY PROPERTY, not a pending cutover; a cutover here would be the defect.</b></div><span class="pill devonly"><span class="d"></span>Dev-only — never ships</span></div>
+        <div class="mod" data-state="done"><div class="name">health</div><div class="desc">Liveness/readiness probe surface.</div><span class="pill done"><span class="d"></span>Live</span></div>
+        <div class="mod" data-state="done"><div class="name">ledger</div><div class="desc">Append-only hash-chained money-movement audit (§3.6).</div><span class="pill done"><span class="d"></span>Live</span></div>
+        <div class="mod" data-state="progress"><div class="name">money-move</div><div class="desc">apps/api/src/money-move/ <b>On disk but NOT in app.module.ts — unreachable until its cutover.</b></div><span class="pill progress"><span class="d"></span>Built — not registered</span></div>
+        <div class="mod" data-state="done"><div class="name">payments</div><div class="desc">PaymentProvider interface + provider adapter, escrow_transfers (§3.5).</div><span class="pill done"><span class="d"></span>Live</span></div>
+        <div class="mod" data-state="done"><div class="name">reconciliation</div><div class="desc">Provider-vs-ledger reconciliation sweep + flags.</div><span class="pill done"><span class="d"></span>Live</span></div>
+        <div class="mod" data-state="gated"><div class="name">settlement</div><div class="desc">Collection settlement-mint: poll worker + mint money core. <b>Registered, but bound to stub seams (MockDeterministicSettlementProvider,MockPaymentProvider) — cannot execute for real.</b></div><span class="pill gated"><span class="d"></span>Wired — seam UNSET</span></div>
+        <div class="mod" data-state="gated"><div class="name">transactions</div><div class="desc">The money spine — fund → hold → release, plus refund/dispute/claim paths. <b>Registered, but bound to stub seams (IllustrativeClaimAdmissionConfigProvider,IllustrativeClaimResolutionAntiFreezeConfigProvider IllustrativeNegotiatedSplitNegotiationConfigProvider,InMemoryFundingRateLimiter InMemoryStatusReadRateLimiter,MockLoggingPayeeRecipientRepairOtpDeliveryPort MockPaymentProvider,NoopFundingRateLimiter StubPrefix,UnsetFeeConfigProvider) — cannot execute for real.</b> <b>5/6 controllers registered — the rest are 404 by design.</b></div><span class="pill gated"><span class="d"></span>Wired — seam UNSET</span></div>
+        <div class="mod" data-state="progress"><div class="name">two-signer</div><div class="desc">apps/api/src/two-signer/ <b>On disk but NOT in app.module.ts — unreachable until its cutover.</b></div><span class="pill progress"><span class="d"></span>Built — not registered</span></div>
+        <div class="mod" data-state="done"><div class="name">users</div><div class="desc">§3.3 identity directory — admin-signer anchor (migrations 0020/0021).</div><span class="pill done"><span class="d"></span>Live</span></div>
+        <div class="mod" data-state="idle"><div class="name">resolution</div><div class="desc">Claims, negotiation window, maker-checker, finalize guard (§7, PIG §6.1).</div><span class="pill idle"><span class="d"></span>Not started</span></div>
+        <div class="mod" data-state="idle"><div class="name">pooling</div><div class="desc">Group pools + contributions (§9.3).</div><span class="pill idle"><span class="d"></span>Not started</span></div>
+        <div class="mod" data-state="idle"><div class="name">ratings</div><div class="desc">Post-release party ratings (§3.3).</div><span class="pill idle"><span class="d"></span>Not started</span></div>
+        <div class="mod" data-state="idle"><div class="name">cashback</div><div class="desc">Payee-issued cashbacks (§5.4).</div><span class="pill idle"><span class="d"></span>Not started</span></div>
+        <div class="mod" data-state="idle"><div class="name">vendorReferralCommission</div><div class="desc">Referral commission program (D30/D31).</div><span class="pill idle"><span class="d"></span>Not started</span></div>
+        <div class="mod" data-state="idle"><div class="name">scoring</div><div class="desc">TrustScore engine (D32) — parent over trust (D36) + fraud (§8.3/D34).</div><span class="pill idle"><span class="d"></span>Not started</span></div>
+        <div class="mod" data-state="idle"><div class="name">notifications</div><div class="desc">Push/SMS/WhatsApp delivery + OTP channels (adapter layer).</div><span class="pill idle"><span class="d"></span>Not started</span></div>
+      </div>
+    </div>
+    <div class="group">
+      <div class="glabel">clients &amp; access channels</div>
+      <div class="mods">
+        <div class="mod" data-state="idle"><div class="name">apps/mobile</div><div class="desc">Expo / React Native — payer + payee role views. <b>1 source file(s), NO specs — nothing here has ever been exercised.</b></div><span class="pill idle"><span class="d"></span>Scaffold — untested</span></div>
+        <div class="mod" data-state="progress"><div class="name">apps/web</div><div class="desc">Next.js client — sign-in, checkout, recovery portal, admin console. <b>This card is the DIRECTORY. Build step 4 (&ldquo;Web — guest surface&rdquo;) is a DIFFERENT thing and is correctly Not started: what shipped is a sign-in slice, not guest checkout.</b> <b>31 source files, 6 spec files on disk.</b></div><span class="pill progress"><span class="d"></span>Building</span></div>
+        <div class="mod" data-state="idle"><div class="name">USSD channel</div><div class="desc">*XXX# shortcode session (§5.9). <b>Phase 2–3, not Phase 1 scope.</b> A backend session-handler/gateway (no client bundle); not in the §11.3 locked repo shape.</div><span class="pill idle"><span class="d"></span>Phase 2–3 — future</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Build order</h2>
+      <span class="note">The §11.4 sequence. Built as vertical slices — the fund→hold→release spine first, then outward.</span>
+    </div>
+    <div class="track">
+      <div class="step" data-state="done"><div class="num tnum">1</div><div class="body"><div class="t">Foundation</div><div class="d">Monorepo (Turborepo + pnpm), shared-types from §3, migration tooling, config boot-read, i18n, CI — scaffold complete (Units 1–6).</div></div><span class="pill done"><span class="d"></span>Done</span></div>
+      <div class="step" data-state="progress"><div class="num tnum">2</div><div class="body"><div class="t">API core</div><div class="d">auth (phone OTP), escrow lifecycle + state machine, PaymentProvider interface + mock adapter, background jobs. <b>Money-spine (ledger §3.6) building now — Units 7–8.</b></div></div><span class="pill progress"><span class="d"></span>In progress</span></div>
+      <div class="step" data-state="idle"><div class="num tnum">3</div><div class="body"><div class="t">Gate B — PayGes adapter + simulator</div><div class="d">Real PayGes adapter against the founder-supplied spec (AUDIT_LOG.md 2026-08-10 01:17:52 GST is authoritative, not Doc 06): six endpoints onto the provider-agnostic port, static X-API-Key, decimal-string amounts against minor units internally, business errors as HTTP 500 with the code in <code>detail</code>, external_id as the idempotency key, retry-not-poll on the no-response path. Reason-code classifiers are a REWRITE, not an edit — only 2 of ~16 codes overlap the MTN-built ones. <b>The simulator replaces PayGes AT THE WIRE (an HTTP service at its own base URL), so activation is a base-URL change; the outcome-injection UI lives IN the simulator and never in the escrow app. Hosting PARKED — test the real app locally (emulator via 10.0.2.2, or a real phone over USB with adb reverse). Founder-ratified 2026-09-04.</b></div></div><span class="pill idle"><span class="d"></span>Not started</span></div>
+      <div class="step" data-state="idle"><div class="num tnum">4</div><div class="body"><div class="t">Web — guest surface</div><div class="d">Checkout + recovery portal (§5.6, §5.8). Ships before mobile; the guest-facing MVP.</div></div><span class="pill idle"><span class="d"></span>Not started</span></div>
+      <div class="step" data-state="idle"><div class="num tnum">5</div><div class="body"><div class="t">Mobile</div><div class="d">Payer/payee role views, dispute flow with evidence upload, ratings.</div></div><span class="pill idle"><span class="d"></span>Not started</span></div>
+      <div class="step" data-state="idle"><div class="num tnum">6</div><div class="body"><div class="t">Trust/fraud + admin console</div><div class="d">Trust-score + fraud batches (§8); admin console in apps/web (dispute queue, maker-checker, fraud digest).</div></div><span class="pill idle"><span class="d"></span>Not started</span></div>
+      <div class="step" data-state="idle"><div class="num tnum">7</div><div class="body"><div class="t">Go-live</div><div class="d">Failover rules, go-live checklist (Doc 6 §7). <b>Step 3 is Gate B (PayGes adapter + simulator) — MTN MoMo was de-scoped 2026-08-10 when the founder supplied the PayGes spec, and Paystack before it on 2026-08-01. This roadmap is HUMAN-SET and cannot be derived; the single build order it must match lives in Tracker Row 249, founder-ratified 2026-09-04.</b></div></div><span class="pill idle"><span class="d"></span>Not started</span></div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    High-level build progress, regenerated from the internal build record. Sanitized: contains no security-gate detail, no fee-model internals, no governance data.
+  </footer>
+
+ </div>
+</div>
+</body>
+</html>
